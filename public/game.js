@@ -9,6 +9,86 @@
   var PADDLE_MARGIN = 20;
   var BALL_R = 8;
 
+  // --- Themes ---
+  var themes = {
+    classic: {
+      bg: '#0a0a0a',
+      paddle: '#ffffff',
+      ball: '#ffffff',
+      line: '#222222',
+      scoreFill: '#333333',
+      nameFill: '#444444',
+      glow: null,
+      trail: false,
+      particles: false,
+    },
+    neon: {
+      bg: '#0a001a',
+      paddle: '#00ffff',
+      ball: '#ff00ff',
+      line: '#1a0033',
+      scoreFill: '#4400aa',
+      nameFill: '#6600cc',
+      glow: { ball: 'rgba(255,0,255,0.6)', paddle: 'rgba(0,255,255,0.5)', radius: 18 },
+      trail: { color: 'rgba(255,0,255,0.15)', length: 8 },
+      particles: false,
+    },
+    ocean: {
+      bg: '#001830',
+      paddle: '#66ccff',
+      ball: '#ffffff',
+      line: '#003060',
+      scoreFill: '#1a5080',
+      nameFill: '#2a6090',
+      glow: { ball: 'rgba(100,200,255,0.4)', paddle: 'rgba(100,200,255,0.3)', radius: 14 },
+      trail: { color: 'rgba(100,200,255,0.1)', length: 6 },
+      particles: { color: 'rgba(100,200,255,0.15)', count: 25, speed: 0.3 },
+    },
+    lava: {
+      bg: '#1a0500',
+      paddle: '#ff6600',
+      ball: '#ffcc00',
+      line: '#331000',
+      scoreFill: '#662200',
+      nameFill: '#883300',
+      glow: { ball: 'rgba(255,100,0,0.6)', paddle: 'rgba(255,100,0,0.4)', radius: 16 },
+      trail: { color: 'rgba(255,80,0,0.12)', length: 10 },
+      particles: { color: 'rgba(255,80,0,0.2)', count: 20, speed: 0.5 },
+    },
+    retro: {
+      bg: '#001200',
+      paddle: '#00ff00',
+      ball: '#00ff00',
+      line: '#003300',
+      scoreFill: '#005500',
+      nameFill: '#006600',
+      glow: { ball: 'rgba(0,255,0,0.4)', paddle: 'rgba(0,255,0,0.3)', radius: 12 },
+      trail: false,
+      particles: false,
+      scanlines: true,
+    },
+  };
+
+  var currentTheme = 'classic';
+  var ballTrail = []; // stores recent ball positions for trail effect
+  var bgParticles = []; // background floating particles
+
+  function initParticles() {
+    bgParticles = [];
+    var t = themes[currentTheme];
+    if (t.particles) {
+      for (var i = 0; i < t.particles.count; i++) {
+        bgParticles.push({
+          x: Math.random() * CANVAS_W,
+          y: Math.random() * CANVAS_H,
+          r: Math.random() * 2 + 1,
+          vx: (Math.random() - 0.5) * t.particles.speed,
+          vy: (Math.random() - 0.5) * t.particles.speed,
+        });
+      }
+    }
+  }
+
   // --- Elements ---
   var screens = {
     name: document.getElementById('screen-name'),
@@ -43,6 +123,17 @@
       screens[key].classList.remove('active');
     }
     screens[name].classList.add('active');
+  }
+
+  // --- Theme Picker ---
+  var themeBtns = document.querySelectorAll('.theme-btn');
+  for (var i = 0; i < themeBtns.length; i++) {
+    themeBtns[i].addEventListener('click', function () {
+      for (var j = 0; j < themeBtns.length; j++) themeBtns[j].classList.remove('selected');
+      this.classList.add('selected');
+      currentTheme = this.getAttribute('data-theme');
+      initParticles();
+    });
   }
 
   // --- Name Screen ---
@@ -147,15 +238,45 @@
     if (!gameState || !screens.game.classList.contains('active')) return;
 
     var st = gameState;
+    var t = themes[currentTheme];
     var flipped = (yourSide === 'top');
+
+    // Update ball trail
+    ballTrail.push({ x: st.ball.x, y: st.ball.y });
+    var maxTrail = t.trail ? t.trail.length : 1;
+    while (ballTrail.length > maxTrail) ballTrail.shift();
+
+    // Update background particles
+    if (t.particles) {
+      for (var pi = 0; pi < bgParticles.length; pi++) {
+        var p = bgParticles[pi];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = CANVAS_W;
+        if (p.x > CANVAS_W) p.x = 0;
+        if (p.y < 0) p.y = CANVAS_H;
+        if (p.y > CANVAS_H) p.y = 0;
+      }
+    }
 
     ctx.save();
 
-    // Clear
-    ctx.fillStyle = '#0a0a0a';
+    // Background
+    ctx.fillStyle = t.bg;
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // If top player, flip the canvas so your paddle is at the bottom
+    // Background particles (before flip so they stay ambient)
+    if (t.particles) {
+      ctx.fillStyle = t.particles.color;
+      for (var pi2 = 0; pi2 < bgParticles.length; pi2++) {
+        var pp = bgParticles[pi2];
+        ctx.beginPath();
+        ctx.arc(pp.x, pp.y, pp.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Flip for top player
     if (flipped) {
       ctx.translate(CANVAS_W, CANVAS_H);
       ctx.rotate(Math.PI);
@@ -163,7 +284,7 @@
 
     // Center line
     ctx.setLineDash([8, 8]);
-    ctx.strokeStyle = '#222';
+    ctx.strokeStyle = t.line;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, CANVAS_H / 2);
@@ -171,28 +292,62 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Paddles
-    ctx.fillStyle = '#fff';
-    // Top paddle
+    // --- Paddles ---
+    if (t.glow) {
+      ctx.shadowColor = t.glow.paddle;
+      ctx.shadowBlur = t.glow.radius;
+    }
+    ctx.fillStyle = t.paddle;
     roundRect(ctx,
       st.paddles.top.x - PADDLE_W / 2,
       PADDLE_MARGIN,
       PADDLE_W, PADDLE_H, 4);
-    // Bottom paddle
     roundRect(ctx,
       st.paddles.bottom.x - PADDLE_W / 2,
       CANVAS_H - PADDLE_MARGIN - PADDLE_H,
       PADDLE_W, PADDLE_H, 4);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
 
-    // Ball
+    // --- Ball trail ---
+    if (t.trail && ballTrail.length > 1) {
+      for (var ti = 0; ti < ballTrail.length - 1; ti++) {
+        var alpha = (ti + 1) / ballTrail.length;
+        var bx = ballTrail[ti].x;
+        var by = ballTrail[ti].y;
+        ctx.fillStyle = t.trail.color;
+        ctx.globalAlpha = alpha * 0.6;
+        ctx.beginPath();
+        ctx.arc(bx, by, BALL_R * alpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // --- Ball ---
+    if (t.glow) {
+      ctx.shadowColor = t.glow.ball;
+      ctx.shadowBlur = t.glow.radius;
+    }
+    ctx.fillStyle = t.ball;
     ctx.beginPath();
     ctx.arc(st.ball.x, st.ball.y, BALL_R, 0, Math.PI * 2);
     ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+
+    // --- Scanlines (retro theme) ---
+    if (t.scanlines) {
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      for (var sl = 0; sl < CANVAS_H; sl += 4) {
+        ctx.fillRect(0, sl, CANVAS_W, 2);
+      }
+    }
 
     ctx.restore();
 
-    // Scores (always upright, not flipped)
-    ctx.fillStyle = '#333';
+    // Scores (always upright)
+    ctx.fillStyle = t.scoreFill;
     ctx.font = '900 36px -apple-system, sans-serif';
     ctx.textAlign = 'center';
 
@@ -209,13 +364,11 @@
       theirName = st.names.bottom;
     }
 
-    // Opponent score at top, yours at bottom
     ctx.fillText(theirScore, CANVAS_W / 2, CANVAS_H / 2 - 20);
     ctx.fillText(yourScore, CANVAS_W / 2, CANVAS_H / 2 + 46);
 
-    // Names
     ctx.font = '600 11px -apple-system, sans-serif';
-    ctx.fillStyle = '#444';
+    ctx.fillStyle = t.nameFill;
     ctx.fillText(theirName, CANVAS_W / 2, 14);
     ctx.fillText(yourName, CANVAS_W / 2, CANVAS_H - 6);
   }
