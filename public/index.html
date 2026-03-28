@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Pong</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Name Entry -->
+  <div id="screen-name" class="screen active">
+    <div class="center-content">
+      <h1>PONG</h1>
+      <p class="subtitle">Multiplayer</p>
+      <input type="text" id="name-input" placeholder="Your name" maxlength="12" autocomplete="off" autofocus>
+      <button id="btn-play" class="btn">Play</button>
+    </div>
+  </div>
+
+  <!-- Lobby / Waiting -->
+  <div id="screen-lobby" class="screen">
+    <div class="center-content">
+      <h2>Finding opponent<span class="dots"></span></h2>
+      <div class="spinner"></div>
+      <button id="btn-ai" class="btn btn-secondary" style="display:none;">Play vs Robot</button>
+    </div>
+  </div>
+
+  <!-- Countdown -->
+  <div id="screen-countdown" class="screen">
+    <div class="center-content">
+      <p id="match-info" class="match-info"></p>
+      <div id="countdown-number" class="countdown-number">2</div>
+    </div>
+  </div>
+
+  <!-- Game -->
+  <div id="screen-game" class="screen">
+    <canvas id="game-canvas"></canvas>
+    <div id="connection-dot" class="connection-dot"></div>
+  </div>
+
+  <!-- Game Over -->
+  <div id="screen-gameover" class="screen">
+    <div class="center-content">
+      <h2 id="winner-text"></h2>
+      <p id="final-score" class="final-score"></p>
+      <button id="btn-again" class="btn">Play Again</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
