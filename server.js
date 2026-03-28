@@ -40,6 +40,7 @@ function createRoom(id, p1, p2) {
     state: 'playing', // playing | finished
     interval: null,
     isAI: p2.isAI || false,
+    tickCount: 0, // used to halve broadcast rate
   };
 }
 
@@ -141,8 +142,10 @@ function tick(room) {
   }
 
   // Score — ball passes top
+  var scored = false;
   if (ball.y - BALL_R <= 0) {
     room.scores.bottom++;
+    scored = true;
     if (room.scores.bottom >= WIN_SCORE) {
       room.state = 'finished';
       broadcastState(room);
@@ -156,6 +159,7 @@ function tick(room) {
   // Score — ball passes bottom
   if (ball.y + BALL_R >= CANVAS_H) {
     room.scores.top++;
+    scored = true;
     if (room.scores.top >= WIN_SCORE) {
       room.state = 'finished';
       broadcastState(room);
@@ -166,7 +170,11 @@ function tick(room) {
     ball.vy = -Math.abs(ball.vy); // towards bottom after top scores
   }
 
-  broadcastState(room);
+  // Broadcast at 30Hz (every other tick), or immediately on score
+  room.tickCount++;
+  if (scored || room.tickCount % 2 === 0) {
+    broadcastState(room);
+  }
 }
 
 function broadcastState(room) {

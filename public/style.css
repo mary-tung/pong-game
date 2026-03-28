@@ -37,9 +37,9 @@ html, body {
 }
 
 h1 {
-  font-size: 64px;
+  font-size: 38px;
   font-weight: 900;
-  letter-spacing: 12px;
+  letter-spacing: 6px;
   margin-bottom: 4px;
 }
 
@@ -227,24 +227,19 @@ input[type="text"]:focus {
   box-shadow: inset 0 0 8px rgba(255,255,255,0.1);
 }
 
-.theme-preview.neon {
-  background: linear-gradient(135deg, #0a001a, #1a0033);
-  box-shadow: inset 0 0 8px rgba(0,255,255,0.3);
+.theme-preview.taylor {
+  background: linear-gradient(135deg, #1a0a2e, #2d1b69);
+  box-shadow: inset 0 0 8px rgba(200,170,255,0.4);
 }
 
-.theme-preview.ocean {
-  background: linear-gradient(135deg, #001830, #003060);
-  box-shadow: inset 0 0 8px rgba(0,150,255,0.3);
+.theme-preview.britney {
+  background: linear-gradient(135deg, #2a0020, #4a0040);
+  box-shadow: inset 0 0 8px rgba(255,50,150,0.4);
 }
 
-.theme-preview.lava {
-  background: linear-gradient(135deg, #1a0500, #331000);
-  box-shadow: inset 0 0 8px rgba(255,80,0,0.3);
-}
-
-.theme-preview.retro {
-  background: linear-gradient(135deg, #001200, #002200);
-  box-shadow: inset 0 0 8px rgba(0,255,0,0.3);
+.theme-preview.cardi {
+  background: linear-gradient(135deg, #1a0a00, #3a1a00);
+  box-shadow: inset 0 0 8px rgba(255,200,50,0.4);
 }
 
 /* Final score */
